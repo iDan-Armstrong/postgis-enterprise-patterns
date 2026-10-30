@@ -1,6 +1,6 @@
 # postgis-enterprise-patterns — spatial database architecture, executable
 
-![CI](https://github.com/USERNAME/postgis-enterprise-patterns/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/iDan-Armstrong/postgis-enterprise-patterns/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A reference implementation of the database architecture decisions behind an enterprise
