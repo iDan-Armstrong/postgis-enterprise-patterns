@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: gis
+          POSTGRES_PASSWORD: gis
+          POSTGRES_DB: gisdb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gis -d gisdb"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgres://gis:gis@localhost:5432/gisdb
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations
+        run: ./migrate.sh
+      - name: Idempotency — second run must be all skips
+        run: ./migrate.sh | tee rerun.log && ! grep -q '^apply' rerun.log
+      - name: Smoke test (constraints, triggers, views, partitions)
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/smoke.sql
+      - name: Index benchmark (100k points — keeps CI fast)
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -v n=100000 -f benchmark/spatial_index_benchmark.sql
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Validate RDS module
+        working-directory: terraform/rds
+        run: |
+          terraform init -backend=false
+          terraform fmt -check
+          terraform validate

@@ -1,0 +1,23 @@
+# Local dev database. Usage:
+#   docker compose up -d
+#   DATABASE_URL=postgres://gis:gis@localhost:5432/gisdb ./migrate.sh
+#   psql postgres://gis:gis@localhost:5432/gisdb -f tests/smoke.sql
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: gis
+      POSTGRES_PASSWORD: gis
+      POSTGRES_DB: gisdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gis -d gisdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

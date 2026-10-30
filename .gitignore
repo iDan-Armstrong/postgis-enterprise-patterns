@@ -1,0 +1,5 @@
+.env
+pgdata/
+*.log
+.terraform/
+*.tfstate*
